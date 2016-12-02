@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.ubbcluj.cs.ann.impl.NeuralNetwork;
 import ro.ubbcluj.cs.ann.impl.NeuralNetworkBuilder;
+import ro.ubbcluj.cs.ann.validation.Statistics;
 import ro.ubbcluj.cs.ann.validation.Validator;
 import ro.ubbcluj.cs.io.DigitImageLoadingService;
 import ro.ubbcluj.cs.io.TrainingExample;
@@ -35,7 +36,7 @@ public class NNApp {
     /**
      * Learning parameters
      */
-    private static final int ITERATIONS = 30;
+    private static final int ITERATIONS = 10;
     private static final int BATCH_SIZE = 10;
     private static final double TRAINING_PERCENT = 5.0 / 6.0;
     private static final double ETA = 0.3;
@@ -71,20 +72,28 @@ public class NNApp {
                 final List<TrainingExample> batch = training.subList(j, Math.min(training.size(), j + BATCH_SIZE));
                 neuralNetwork.sgd(batch);
             }
-            final int result = Validator.validateClassification(neuralNetwork, validation);
+            final Statistics statistics = Validator.getStatistics(neuralNetwork, validation);
+            final int result = statistics.getCorrectAnswers();
             if (result > best) {
                 bestNN = new NeuralNetwork(neuralNetwork);
                 best = result;
             }
-            log.info(String.format("Iteration %d: %d/%d", i, result, validation.size()));
-
+            log.info(String.format("Iteration %d (Accuracy) : %.4f ", i, statistics.getAccuracy()));
+            log.info(String.format("Iteration %d (F-measure): %.4f", i, statistics.getFMeasure()));
         }
 
-        final int resultValidation = Validator.validateClassification(bestNN, validation);
-        log.info(String.format("Best on validation: %d/%d", resultValidation, validation.size()));
+        final Statistics statisticsValidation = Validator.getStatistics(bestNN, validation);
+        final int resultValidation = statisticsValidation.getCorrectAnswers();
 
-        final int result = Validator.validateClassification(bestNN, testData);
+        log.info(String.format("Best on validation: %d/%d", resultValidation, validation.size()));
+        log.info(statisticsValidation.toString());
+
+        final Statistics statisticsTest = Validator.getStatistics(bestNN, testData);
+        final int result = statisticsTest.getCorrectAnswers();
         log.info(String.format("Best on test: %d/%d", result, testData.size()));
+
+
+        log.info(statisticsTest.toString());
     }
 
 

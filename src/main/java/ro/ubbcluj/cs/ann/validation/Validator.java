@@ -7,6 +7,8 @@ import ro.ubbcluj.cs.io.TrainingExample;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static ro.ubbcluj.cs.ann.impl.MathUtils.getResult;
+
 public class Validator {
 
 
@@ -31,6 +33,25 @@ public class Validator {
             }
         }
         return totalCorrect;
+    }
+
+    /**
+     * Compute the number of correctly classified instances
+     * of an ANN over a set of training examples
+     *
+     * @param neuralNetwork given neuralNetwork
+     * @param testData      given set of test data
+     * @return - Computed measures
+     */
+    public static Statistics getStatistics(final NeuralNetwork neuralNetwork, final List<TrainingExample> testData) {
+        final Statistics statistics = new Statistics();
+        for (TrainingExample trainingExample : testData) {
+            final double[] targetValue = trainingExample.getTargetValue();
+            final int predicted = neuralNetwork.classify(trainingExample.getFeatures());
+            final int actual = getResult(targetValue);
+            statistics.addResult(predicted, actual);
+        }
+        return statistics;
     }
 
 

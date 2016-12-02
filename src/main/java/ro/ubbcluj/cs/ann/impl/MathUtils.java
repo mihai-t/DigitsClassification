@@ -2,11 +2,12 @@ package ro.ubbcluj.cs.ann.impl;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * @author Mihai Teletin
  */
-class MathUtils {
+public class MathUtils {
 
     private static volatile Random random = new Random();
 
@@ -156,6 +157,13 @@ class MathUtils {
             s += a[i] * b[i];
         }
         return s;
+    }
+
+
+    public static int getResult(double[] targetValue){
+        return IntStream.range(0, targetValue.length)
+                .reduce((a, b) -> targetValue[a] < targetValue[b] ? b : a)
+                .orElse(-1);
     }
 
 }
