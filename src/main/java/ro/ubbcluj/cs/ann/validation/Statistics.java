@@ -3,16 +3,29 @@ package ro.ubbcluj.cs.ann.validation;
 import java.util.Arrays;
 
 /**
+ * Statistics class used to keep track of the testing results
+ *
  * @author Mihai Teletin
  */
 public class Statistics implements Comparable<Statistics> {
-    private int classes = -1;
+
+    /**
+     * Total number of classes
+     */
+    private int lastClass;
+
+    /**
+     * The multi-class confusion matrix
+     * <p>
+     * confusionMatrix[i][j] is the number of j that are predicted as i
+     * Notice that confusionMatrix[i][i] represents correct answers
+     */
     private int confusionMatrix[][];
 
     public void addResult(final int predictedClass, final int actualClass) {
         final int newDimension = Math.max(predictedClass, actualClass) + 1;
-        if (newDimension > classes) {
-            classes = newDimension;
+        if (newDimension > lastClass) {
+            lastClass = newDimension;
             confusionMatrix = reallocate(confusionMatrix, newDimension);
         }
 
@@ -20,9 +33,9 @@ public class Statistics implements Comparable<Statistics> {
     }
 
     /**
-     * Retrieves the generated multi class confussion matrix
+     * Retrieves the generated multi class confusion matrix
      *
-     * @return confusion matrix
+     * @return copy of the stored confusion matrix
      */
     public int[][] getConfusionMatrix() {
         return Arrays.stream(confusionMatrix)
@@ -30,8 +43,14 @@ public class Statistics implements Comparable<Statistics> {
                 .toArray((int length) -> new int[length][]);
     }
 
-    public int getTruePositives(int clazz) {
-        if (clazz > classes) {
+    /**
+     * Computes number of correctly classified items
+     *
+     * @param clazz requested class
+     * @return true positives
+     */
+    public int getTruePositives(final int clazz) {
+        if (clazz > lastClass) {
             return 0;
         }
         return confusionMatrix[clazz][clazz];
@@ -39,7 +58,7 @@ public class Statistics implements Comparable<Statistics> {
 
     public int getFalsePositives(int clazz) {
         int sum = 0;
-        for (int j = 0; j < classes; ++j) {//sum on columns
+        for (int j = 0; j < lastClass; ++j) {//sum on columns
             if (j != clazz) {
                 sum += confusionMatrix[clazz][j];
             }
@@ -49,7 +68,7 @@ public class Statistics implements Comparable<Statistics> {
 
     public int getFalseNegatives(int clazz) {
         int sum = 0;
-        for (int i = 0; i < classes; ++i) {//sum on rows
+        for (int i = 0; i < lastClass; ++i) {//sum on rows
             if (i != clazz) {
                 sum += confusionMatrix[i][clazz];
             }
@@ -57,13 +76,19 @@ public class Statistics implements Comparable<Statistics> {
         return sum;
     }
 
-    //precision = TP/(TP+FP)
+
+    /**
+     * Computes an averaged precision
+     * precision = TP/(TP+FP)
+     *
+     * @return
+     */
     public double getPrecision() {
         double precision = 0;
 
         int actualClasses = 0;
 
-        for (int i = 0; i < classes; ++i) {
+        for (int i = 0; i < lastClass; ++i) {
             final int total = getTruePositives(i) + getFalsePositives(i);
             if (total != 0) {
                 actualClasses++;
@@ -74,13 +99,18 @@ public class Statistics implements Comparable<Statistics> {
         return precision / actualClasses;
     }
 
-    //recall = TP/(FN+TP)
+
+    /**
+     * recall = TP/(FN+TP)
+     *
+     * @return
+     */
     public double getRecall() {
         double recall = 0;
 
         int actualClasses = 0;
 
-        for (int i = 0; i < classes; ++i) {
+        for (int i = 0; i < lastClass; ++i) {
             final int total = getTruePositives(i) + getFalseNegatives(i);
             if (total != 0) {
                 actualClasses++;
@@ -95,7 +125,7 @@ public class Statistics implements Comparable<Statistics> {
 
         int good = 0;
         int total = 0;
-        for (int i = 0; i < classes; ++i) {
+        for (int i = 0; i < lastClass; ++i) {
             final int truePositives = getTruePositives(i);
             good += truePositives;
             total += getFalsePositives(i) + truePositives;
@@ -108,7 +138,7 @@ public class Statistics implements Comparable<Statistics> {
     public int getCorrectAnswers() {
         int sum = 0;
 
-        for (int i = 0; i < classes; ++i) {
+        for (int i = 0; i < lastClass; ++i) {
             sum += getTruePositives(i);
         }
 
@@ -141,8 +171,8 @@ public class Statistics implements Comparable<Statistics> {
         final StringBuilder stringBuilder = new StringBuilder("\n");
         stringBuilder.append("--------------------------------------------------");
         stringBuilder.append("\n");
-        for (int i = 0; i < classes; ++i) {
-            for (int j = 0; j < classes; ++j) {
+        for (int i = 0; i < lastClass; ++i) {
+            for (int j = 0; j < lastClass; ++j) {
                 if (confusionMatrix[j][i] != 0) {
                     stringBuilder.append(String.format("Class %d classified by model as %d for %4d times\n", i, j, confusionMatrix[j][i]));
                 }

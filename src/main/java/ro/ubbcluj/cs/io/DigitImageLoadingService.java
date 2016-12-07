@@ -1,5 +1,8 @@
 package ro.ubbcluj.cs.io;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +14,8 @@ import java.util.List;
 
 public class DigitImageLoadingService {
 
+
+    private static Logger log = LoggerFactory.getLogger(DigitImageLoadingService.class);
 
     /**
      * the following constants are defined as per the values described at http://yann.lecun.com/exdb/mnist/
@@ -85,6 +90,9 @@ public class DigitImageLoadingService {
         final int numberOfLabels = ByteBuffer.wrap(Arrays.copyOfRange(labelBytes, NUMBER_ITEMS_OFFSET, NUMBER_ITEMS_OFFSET + ITEMS_SIZE)).getInt();
         final int numberOfImages = ByteBuffer.wrap(Arrays.copyOfRange(imageBytes, NUMBER_ITEMS_OFFSET, NUMBER_ITEMS_OFFSET + ITEMS_SIZE)).getInt();
 
+
+        log.debug("Number of samples to be read: " + numberOfImages);
+
         if (numberOfImages != numberOfLabels) {
             throw new IOException("The number of labels and images do not match!");
         }
@@ -93,9 +101,12 @@ public class DigitImageLoadingService {
         final int numRows = ByteBuffer.wrap(Arrays.copyOfRange(imageBytes, NUMBER_OF_ROWS_OFFSET, NUMBER_OF_ROWS_OFFSET + ROWS_SIZE)).getInt();
         final int numCols = ByteBuffer.wrap(Arrays.copyOfRange(imageBytes, NUMBER_OF_COLUMNS_OFFSET, NUMBER_OF_COLUMNS_OFFSET + COLUMNS_SIZE)).getInt();
 
+
         if (numRows != ROWS && numCols != COLUMNS) {
             throw new IOException("Bad image. Rows and columns do not equal " + ROWS + "x" + COLUMNS);
         }
+
+        log.debug("Sample dimension: " + numRows + "x" + numCols);
 
         final List<TrainingExample> trainingExamples = new ArrayList<>();
 
@@ -119,6 +130,10 @@ public class DigitImageLoadingService {
 
             trainingExamples.add(example);
         }
+
+        log.debug("Sample data: " + trainingExamples.get(0));
+
+        log.debug("Loaded: " + trainingExamples.size() + " samples");
 
         return trainingExamples;
     }

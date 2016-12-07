@@ -46,10 +46,13 @@ public class NNApp {
     private static final Activation ACTIVATION_FUNCTION_OUTPUT = SIGMOID;
 
     public static void main(final String[] args) throws Exception {
+        log.debug("Loading training data");
         final List<TrainingExample> trainData = new DigitImageLoadingService(TRAINING_LABELS, TRAIN_FEATURES, ACTIVATION_FUNCTION.maxValue).loadDigitImages();
         Collections.shuffle(trainData);
         final List<TrainingExample> training = trainData.subList(0, (int) (TRAINING_PERCENT * trainData.size()));
         final List<TrainingExample> validation = trainData.subList((int) (TRAINING_PERCENT * trainData.size()), trainData.size());
+
+        log.debug("Loading test data");
         final List<TrainingExample> testData = new DigitImageLoadingService(TESTING_LABELS, TESTING_FEATURES, ACTIVATION_FUNCTION.maxValue).loadDigitImages();
 
         log.info(String.format("IMAGE DATA LOADED: %d training, %d validation, %d test", training.size(), validation.size(), testData.size()));
@@ -57,14 +60,12 @@ public class NNApp {
         final NeuralNetwork neuralNetwork = new NeuralNetworkBuilder()
                 .havingSizes(784, 50, 10)
                 .havingLearningRate(ETA)
-                .withActivationFunction(ACTIVATION_FUNCTION)//todo integration needed
                 .withOutputFunction(ACTIVATION_FUNCTION_OUTPUT)
                 .withWeightsInitialization(XAVIER)
                 .withCostFunction(MEAN_SQUARED)
-                .withWeightDecayL2(0.02)//todo integration needed
-                .withMomentum(0.9)//todo integration needed
                 .build();
 
+        log.info("Start training");
         int best = 0;
         NeuralNetwork bestNN = null;
         for (int i = 1; i <= ITERATIONS; ++i) {
